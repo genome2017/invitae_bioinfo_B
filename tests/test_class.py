@@ -29,14 +29,24 @@ class TestTranscriptToGenomicInvitaeInput:
         TR2 = Mappings(cigar, chr, genomic_pos, mapping_orientation)
         self.mappings['TR2']=TR2
 
+        #example3
+        cigar = '8M2I5M4D3M'
+        chr = 'CHR2'
+        genomic_pos = 3
+        mapping_orientation = '+'
+        TR3 = Mappings(cigar, chr, genomic_pos, mapping_orientation)
+        self.mappings['TR3']=TR3
+
     def test(self):
 
         # plus strand tests
+        coord0 = Mappings.transcript_to_genomic_pos(8,self.mappings['TR3'])
         coord1 = Mappings.transcript_to_genomic_pos(4,self.mappings['TR1'])
         coord2 = Mappings.transcript_to_genomic_pos(0,self.mappings['TR2'])
         coord3 = Mappings.transcript_to_genomic_pos(13,self.mappings['TR1'])
         coord4 = Mappings.transcript_to_genomic_pos(10,self.mappings['TR2'])
 
+        assert coord0 == (10,11)
         assert coord1 == (7,7)
         assert coord2 == (10,10)
         assert coord3 == (23,23)

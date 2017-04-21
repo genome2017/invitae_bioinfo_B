@@ -91,6 +91,7 @@ def translate_coordinates(genome_mapping_file, processing_file, output_file):
     :return: void
     """
 
+    #TODO : needs to be refactored
     mappings = {}
     with open(genome_mapping_file) as in_handle:
         for line in in_handle:
@@ -198,7 +199,7 @@ def translate_coordinates(genome_mapping_file, processing_file, output_file):
             # map all to string
             output_line = "\t".join(map(str,print_array))
             print(output_line)
-            o_handle.write(output_line)
+            o_handle.write(output_line+"\n")
 
 
 ######## MAIN ###############
