@@ -46,7 +46,7 @@ def is_valid_cigar(cigar_string):
     is_valid = True
 
     if len(matches) != len(matches_2):
-        # sanity check that we when we parse only the operations, we get the same number
+        # sanity check that we when we parse only the operations, we get the same number of elements
         return False
 
     for m in matches:
@@ -65,8 +65,8 @@ def is_valid_cigar(cigar_string):
 
 
 def validate_input(args):
+    # TODO: at this stage can also verify format of the inputs
     if not os.path.isfile( args.genome_mapping_file):
-        # TODO: at this stage can also verify format of the inputs
         return (False, "Provided genome mapping file does not exist" )
 
     if not os.path.isfile( args.transcript_processing_file):
@@ -91,14 +91,14 @@ def translate_coordinates(genome_mapping_file, processing_file, output_file):
     :return: void
     """
 
-    #TODO : needs to be refactored
+    #TODO : needs to be refactored and broken into smaller methods
     mappings = {}
     with open(genome_mapping_file) as in_handle:
         for line in in_handle:
             data = line.rstrip().split("\t")
 
             if len(data) < 4:
-                sys.stderr.write("Line in genome mapping file does have atleast 4 columns\n")
+                sys.stderr.write("Line in genome mapping file does have atleast 4 columns. Skipping.\n")
                 sys.stderr.write(line)
                 continue
 
@@ -126,7 +126,7 @@ def translate_coordinates(genome_mapping_file, processing_file, output_file):
             data = line.rstrip().split("\t")
 
             if len(data)<2:
-                sys.stderr.write("Line in processing file does have atleast 4 columns\n")
+                sys.stderr.write("Line in processing file does have atleast 2 columns\n")
                 sys.stderr.write(line)
                 continue
 
@@ -145,7 +145,6 @@ def translate_coordinates(genome_mapping_file, processing_file, output_file):
                 continue
 
             genome_mapping_info = mappings[transcript]
-            mapping_direction = data[2]
 
             if mapping_direction != "TRANSCRIPT" and mapping_direction!="GENOMIC":
                 sys.stderr.write ("Specification of mapping direction is not TRANSCRIPT or GENOMIC.Skipping\n")
@@ -158,47 +157,44 @@ def translate_coordinates(genome_mapping_file, processing_file, output_file):
                 sys.stderr.write("Could not process this mapping.  Skipping "+transcript+".\n")
                 continue
 
-            # in cases where mapped coordinate is not a tuple (for cigar operations which are not insertions),
-            # return only 1 int instead of a tuple
-
             #TODO: move printing to it's own method
             output_line = None
             print_array = []
             print_array.append(genome_mapping_info.transcript_name)
-            print_array.append(genome_mapping_info.pos)
+            print_array.append(query_position)
             print_array.append(genome_mapping_info.chromosome)
             print_array.append(None) # placeholder for position
-            genome_pos = genome_mapping_info.pos
-            transcript_pos = None
+            genome_position = genome_mapping_info.pos
+            transcript_position = query_position
 
             if mapping_direction == "GENOMIC":
                 output_coordinate = Mappings.genomic_to_transcript_pos(query_position, query_mapping )
 
                 #TODO : handle this better
                 if output_coordinate is None:
-                     genome_pos = "ERROR"
+                     transcript_position = "ERROR"
                 else:
-                    genome_pos = output_coordinate[0]
+                    transcript_position = output_coordinate[0]
 
                     if output_coordinate[0] != output_coordinate[1]:
-                        genome_pos = str(output_coordinate[0]) + "-" + str(output_coordinate[1])
-                transcript_pos = query_position
+                        transcript_position = str(output_coordinate[0]) + "-" + str(output_coordinate[1])
+                genome_position = query_position
 
             else:
                 output_coordinate = Mappings.transcript_to_genomic_pos(query_position, query_mapping )
                 if output_coordinate is None:
-                    transcript_pos = "ERROR"
+                    genome_position = "ERROR"
                 else:
-                    transcript_pos = output_coordinate[0]
+                    genome_position = output_coordinate[0]
                     if output_coordinate[0] != output_coordinate[1]:
-                        transcript_pos = str(output_coordinate[0]) + "-" + str(output_coordinate[1])
+                        genome_position = str(output_coordinate[0]) + "-" + str(output_coordinate[1])
 
-            print_array[1] = genome_pos
-            print_array[3] = transcript_pos
+            print_array[1] = transcript_position
+            print_array[3] = genome_position
 
             # map all to string
             output_line = "\t".join(map(str,print_array))
-            print(output_line)
+            #print(output_line)
             o_handle.write(output_line+"\n")
 
 

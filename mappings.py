@@ -58,10 +58,10 @@ class Mappings:
 
     def increment_indices(self, cigar_operation, query_start, reference_start):
         """
-        Given a cigar string and ints representing the start of a new range, find stop coordinate for 
+        Given a cigar string and integers representing the start of a new range, find stop coordinate for 
         the range.   
     
-        :param cigar_operation, string: CigarOperations object
+        :param cigar_operatio, CigarOperations object
         :param query_start: Start position of the next range for query.  
         :param reference_start: Start position of the next range for reference.
         :return:  integers representing start/stop positions for query/reference range
@@ -144,7 +144,7 @@ class Mappings:
         """
     
         :param SR1: SequenceRange list in which the query_coordinate is location
-        :param SR2: SequenceRange lis.  'Other' list in which the query coordinate is to be translated.
+        :param SR2: SequenceRange list.  'Other' list in which the query coordinate is to be translated.
         :param query_coordinate: int representing the position to query
         :param is_forward_SR1: boolean.  Is the sequence range SR1 mapping 5'->3'
         :param is_forward_SR2: boolean, Is the sequence range SR2 mapping 5'->3'
@@ -153,6 +153,7 @@ class Mappings:
         is the coordinate in SR2 immediately after the insertion.  
         """
 
+	#TODO: change variable names SR1 and SR2 to imply a list
         if not is_forward_SR1 and not is_forward_SR2:
             sys.stderr.write("Query and reference mappings cannot both be on reverse strand. Skipping\n")
             return None
@@ -163,12 +164,19 @@ class Mappings:
 
         # get the last coordinate of SR1 to make sure that the queried coordinate is within range
         final_index = -1
+	first_index = 0
         if not is_forward_SR1:
             final_index = 0
+	    first_index = -1
 
         if query_coordinate > SR1[final_index].stop_pos:
             sys.stderr.write("Requested position is greater than the length of the alignment of query on ref.\n")
             return None
+
+        if query_coordinate < SR1[first_index].start_pos:
+            sys.stderr.write("Requested position is lower than the first coordinate annotated.\n")
+            return None
+
 
         genomic_pos = None
         matching_positions = None
@@ -198,7 +206,7 @@ class Mappings:
                     matching_positions = (genomic_pos, genomic_pos)
                 else:
                     # Insertion. Find the coordinates immediately before and after insertion
-
+		    #TODO: improve exception handling here
                     prev_bin = i - 1  # assume that this bin is atleast 2 since we don't start with indel cigar ops
                     next_bin = i + 1
                     prev_coord = SR2[prev_bin].stop_pos
@@ -231,7 +239,7 @@ class CigarOperation:
     """
     Class to hold information related to a one cigar operation
     :param: op_length, int.  The length of the cigar string
-    :param: operation, string.  The type of cigar operation (MDI)
+    :param: operation, string.  The type of cigar operation (e.g. MDI)
     """
 
     def __init__(self, op_length, operation):
@@ -243,8 +251,7 @@ class CigarOperation:
 class SequenceRange:
     """
      Class which represents one contiguous segment of sequence(query or reference) which matches the cigar string
-    :param: start_pos, int.  The starting position of this range.  Start is lower than top, regardless of mapping 
-    orientation
+    :param: start_pos, int.  The starting position of this range.  Start is lower than stop, regardless of mapping orientation
     :param: stop_pos, int.  The last position in this range. 
     :param: cigar_operation, CigarOperation object.  Represents the cigar operation which corresponds to this range. 
     """
